@@ -20,20 +20,21 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
-
 # 抢购失败最大次数
 max_retry_count = 30
 
 
 def default_chrome_path():
-
     driver_dir = getattr(utils_settings, "DRIVER_DIR", None)
     if platform.system() == "Windows":
         if driver_dir:
             return os.path.abspath(os.path.join(driver_dir, "chromedriver.exe"))
 
         raise Exception("The chromedriver drive path attribute is not found.")
+    # mac
+    elif platform.system() == "Darwin":
+        if driver_dir:
+            return os.path.abspath(os.path.join(driver_dir, "chromedriver"))
     else:
         if driver_dir:
             return os.path.abspath(os.path.join(driver_dir, "chromedriver"))
@@ -74,7 +75,8 @@ class ChromeDrive:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.accept_untrusted_certs = True
         chrome_options.assume_untrusted_cert_issuer = True
-        arguments = ['--no-sandbox', '--disable-impl-side-painting', '--disable-setuid-sandbox', '--disable-seccomp-filter-sandbox',
+        arguments = ['--no-sandbox', '--disable-impl-side-painting', '--disable-setuid-sandbox',
+                     '--disable-seccomp-filter-sandbox',
                      '--disable-breakpad', '--disable-client-side-phishing-detection', '--disable-cast',
                      '--disable-cast-streaming-hw-encoding', '--disable-cloud-import', '--disable-popup-blocking',
                      '--ignore-certificate-errors', '--disable-session-crashed-bubble', '--disable-ipv6',
@@ -84,13 +86,12 @@ class ChromeDrive:
         chrome_options.add_argument(f'--user-agent={choice(get_useragent_data())}')
         return chrome_options
 
-    def login(self, login_url: str="https://www.taobao.com"):
+    def login(self, login_url: str = "https://www.taobao.com"):
         if login_url:
             self.driver = self.start_driver()
         else:
             print("Please input the login url.")
             raise Exception("Please input the login url.")
-
 
         while True:
             self.driver.get(login_url)
@@ -123,7 +124,6 @@ class ChromeDrive:
                 self.get_cookie()
                 print("抢购时间点将近，停止自动刷新，准备进入抢购阶段...")
                 break
-
 
     def sec_kill(self):
         self.keep_wait()
@@ -177,12 +177,13 @@ class ChromeDrive:
             sleep(0.1)
         if submit_succ:
             if self.password:
-                self.pay()
-
+                print("付款...")
+                #self.pay()
 
     def pay(self):
         try:
-            element = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'sixDigitPassword')))
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'sixDigitPassword')))
             element.send_keys(self.password)
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, 'J_authSubmit'))).click()
             notify_user(msg="付款成功")
@@ -192,9 +193,8 @@ class ChromeDrive:
             sleep(60)
             self.driver.quit()
 
-
     def get_cookie(self):
         cookies = self.driver.get_cookies()
         cookie_json = json.dumps(cookies)
-        with open('./cookies.txt', 'w', encoding = 'utf-8') as f:
+        with open('./cookies.txt', 'w', encoding='utf-8') as f:
             f.write(cookie_json)
