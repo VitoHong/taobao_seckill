@@ -30,10 +30,15 @@ def main():
     txt = Entry(win, textvariable=start_time, width=18)
     txt.grid(column=1, row=0)
     start_time.set(str(datetime.datetime.now()))
+    day = datetime.date.today()
+    time = '20:00:00'
+    time_str = f'{str(day)} {time}'
+    start_time.set(str(time_str))
 
     lbl2 = Label(win, text="支付密码：", width=8, height=2)
     lbl2.grid(column=0, row=1)
-    txt2 = Entry(win, width=18, show='*')
+    passwd = StringVar()
+    txt2 = Entry(win, width=18, show='*', textvariable=passwd)
     txt2.grid(column=1, row=1)
 
     b1 = Button(win, text='开始', command=lambda: run_killer(txt, txt2))
